@@ -34,6 +34,13 @@ class VisualsLayout(Widget):
            "blind spot as long as your car has BSM supported."),
         None,
       ),
+      "BlindSpotChime": (
+        lambda: tr("Blind Spot Chime"),
+        tr("Play a chime when a turn signal is on and a vehicle is detected in that side's blind spot. " +
+           "It also sounds while openpilot is disengaged, at low speed, and with Auto Lane Change off. " +
+           "Hazard lights do not trigger it. Quiet Mode mutes it. This is a notification only."),
+        None,
+      ),
       "TorqueBar": (
         lambda: tr("Steering Arc"),
         tr("Display steering arc on the driving screen when lateral control is enabled."),

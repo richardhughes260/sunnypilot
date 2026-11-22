@@ -31,6 +31,7 @@ from openpilot.sunnypilot import get_sanitize_int_param
 from openpilot.sunnypilot.selfdrive.car.car_specific import CarSpecificEventsSP
 from openpilot.sunnypilot.selfdrive.car.intelligent_cruise_button_management.controller import IntelligentCruiseButtonManagement
 from openpilot.sunnypilot.selfdrive.selfdrived.button_state_tracker import ButtonStateTracker
+from openpilot.sunnypilot.selfdrive.controls.lib.blindspot_chime import BlindspotChime
 from openpilot.sunnypilot.selfdrive.selfdrived.events import EventsSP
 
 REPLAY = "REPLAY" in os.environ
@@ -172,6 +173,8 @@ class SelfdriveD:
 
     self.events_sp = EventsSP()
     self.events_sp_prev = []
+    self.blindspot_chime = BlindspotChime()
+    self.blindspot_chime_enabled = self.params.get_bool("BlindSpotChime")
 
     self.mads = ModularAssistiveDrivingSystem(self)
     self.icbm = IntelligentCruiseButtonManagement(self.CP, self.CP_SP)
@@ -367,6 +370,12 @@ class SelfdriveD:
     elif self.sm['modelV2'].meta.laneChangeState in (LaneChangeState.laneChangeStarting,
                                                     LaneChangeState.laneChangeFinishing):
       self.events.add(EventName.laneChange)
+
+    # Same-side blind spot chime. Independent of engagement, speed, and auto lane change.
+    # laneChangeBlocked stays as-is and still owns the engaged pre-lane-change case.
+    if self.blindspot_chime.update(CS.leftBlinker, CS.rightBlinker, CS.leftBlindspot, CS.rightBlindspot,
+                                   self.sm.frame * DT_CTRL, self.blindspot_chime_enabled and CS.canValid):
+      self.events_sp.add(custom.OnroadEventSP.EventName.blindspotChime)
 
     # Handle lane turn
     lane_turn_direction = self.sm['modelDataV2SP'].laneTurnDirection
@@ -659,6 +668,7 @@ class SelfdriveD:
       self.is_metric = self.params.get_bool("IsMetric")
       self.is_ldw_enabled = self.params.get_bool("IsLdwEnabled")
       self.disengage_on_accelerator = self.params.get_bool("DisengageOnAccelerator")
+      self.blindspot_chime_enabled = self.params.get_bool("BlindSpotChime")
       self.personality = self.params.get("LongitudinalPersonality", return_default=True)
 
       self.mads.read_params()

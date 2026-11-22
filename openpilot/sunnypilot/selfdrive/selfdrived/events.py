@@ -256,4 +256,14 @@ EVENTS_SP: dict[int, dict[str, Alert | AlertCallbackType]] = {
       AlertStatus.normal, AlertSize.small,
       Priority.LOW, VisualAlert.none, AudibleAlert.prompt, 2.),
   },
+
+  # Lowest priority so a safety alert always keeps the speaker. PERMANENT so it
+  # still sounds while openpilot is disengaged. Empty text so it does not cover the HUD.
+  EventNameSP.blindspotChime: {
+    ET.PERMANENT: Alert(
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.prompt, 0.5),
+  },
 }

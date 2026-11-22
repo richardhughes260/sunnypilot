@@ -1359,6 +1359,12 @@
               "description": "Enabling this will display warnings when a vehicle is detected in your blind spot as long as your car has BSM supported."
             },
             {
+              "key": "BlindSpotChime",
+              "widget": "toggle",
+              "title": "Blind Spot Chime",
+              "description": "Play a chime when a turn signal is on and a vehicle is detected in that side's blind spot. It also sounds while openpilot is disengaged, at low speed, and with Auto Lane Change off. Hazard lights do not trigger it. Quiet Mode mutes it. This is a notification only."
+            },
+            {
               "key": "TorqueBar",
               "widget": "toggle",
               "title": "Steering Arc",
@@ -2385,6 +2391,28 @@
               "type": "capability",
               "field": "toyota_tss2",
               "equals": true
+            }
+          ]
+        },
+        {
+          "key": "ToyotaEnhancedBsm",
+          "widget": "toggle",
+          "needs_onroad_cycle": true,
+          "title": "Enhanced Blind Spot Monitoring (Alpha)",
+          "description": "Poll the blind spot modules on cars where the stock BSM message does not report vehicles, including TSS-P with a smartDSU (2016-19 Lexus RX). Requires sunnypilot longitudinal control. The debug session turns off below about 13 mph and stays off until about 16 mph, because it can disturb the eagle-eye camera. Alpha. Use at your own risk.",
+          "enablement": [
+            {
+              "type": "not_engaged"
+            },
+            {
+              "type": "capability",
+              "field": "has_longitudinal_control",
+              "equals": true
+            },
+            {
+              "type": "param",
+              "key": "ToyotaEnforceStockLongitudinal",
+              "equals": false
             }
           ]
         }

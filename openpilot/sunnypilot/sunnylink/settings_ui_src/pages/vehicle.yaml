@@ -116,3 +116,16 @@ sections:
     - type: capability
       field: toyota_tss2
       equals: true
+  - key: ToyotaEnhancedBsm
+    widget: toggle
+    needs_onroad_cycle: true
+    title: Enhanced Blind Spot Monitoring (Alpha)
+    description: Poll the blind spot modules on cars where the stock BSM message does not report vehicles, including TSS-P
+      with a smartDSU (2016-19 Lexus RX). Requires sunnypilot longitudinal control. The debug session turns off below
+      about 13 mph and stays off until about 16 mph, because it can disturb the eagle-eye camera. Alpha. Use at your own risk.
+    enablement:
+    - $ref: '#/macros/not_engaged'
+    - $ref: '#/macros/longitudinal'
+    - type: param
+      key: ToyotaEnforceStockLongitudinal
+      equals: false
