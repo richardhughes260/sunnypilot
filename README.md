@@ -1,3 +1,21 @@
+# ⚠️ Personal fork — ALPHA · UNTESTED on the road
+
+**This is a personal fork of sunnypilot. It is not affiliated with or supported by sunnypilot or comma. ALPHA. UNTESTED on the road. Use at your own risk.**
+
+This fork adds a **blind-spot chime**: an audible alert when the turn signal is on and a vehicle is in that side's blind spot. The chime works while openpilot is disengaged.
+
+### Target vehicles
+
+- **2017 Lexus RX 450h F Sport** — `LEXUS_RX`, TSS-P. Blind-spot data comes via enhanced BSM. This car needs a smartDSU and alpha longitudinal, and uses the companion opendbc fork [richardhughes260/opendbc](https://github.com/richardhughes260/opendbc).
+- **2020 Lexus RX 450h** — `LEXUS_RX_TSS2`, stock BSM.
+
+### Toggles to enable
+
+- `BlindSpotChime` — Blind Spot Chime. Enable this on both cars.
+- `ToyotaEnhancedBsm` — Enhanced Blind Spot Monitoring. Enable this on the 2017 RX (`LEXUS_RX`) only. The 2020 RX uses stock BSM.
+
+---
+
 ![](https://user-images.githubusercontent.com/47793918/233812617-beab2e71-57b9-479e-8bff-c3931347ca40.png)
 
 ## 🌞 What is sunnypilot?
