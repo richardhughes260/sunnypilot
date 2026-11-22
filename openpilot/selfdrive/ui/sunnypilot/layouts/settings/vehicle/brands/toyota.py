@@ -16,6 +16,7 @@ from opendbc.car.toyota.values import ToyotaFlags
 
 ONROAD_ONLY_DESCRIPTION = tr_noop("Start the vehicle to check vehicle compatibility.")
 SNG_HACK_UNAVAILABLE = tr_noop("sunnypilot Longitudinal Control must be available and enabled for your vehicle to use this feature.")
+ENHANCED_BSM_UNAVAILABLE = tr_noop("sunnypilot longitudinal control must be enabled. TSS-P cars such as the 2016-19 Lexus RX also need a smartDSU.")
 PLATFORM_UNAVAILABLE = tr_noop("This feature is currently not available on this platform.")
 
 DESCRIPTIONS = {
@@ -29,6 +30,12 @@ DESCRIPTIONS = {
   'tss2_smooth': tr_noop(
     'Enable smoother longitudinal control for TSS2 vehicles. ' +
     'Uses a custom speed-dependent integral gain curve for smoother traffic driving.'
+  ),
+  'enhanced_bsm': tr_noop(
+    'Poll the blind spot modules on cars where the stock BSM message does not report vehicles, ' +
+    'including TSS-P with a smartDSU (2016-19 Lexus RX). Requires sunnypilot longitudinal control. ' +
+    'The debug session turns off below about 13 mph and stays off until about 16 mph, because it can disturb the eagle-eye camera. ' +
+    'Alpha. Use at your own risk.'
   ),
 }
 
@@ -61,10 +68,19 @@ class ToyotaSettings(BrandSettings):
       enabled=lambda: not ui_state.engaged,
     )
 
+    self.enhanced_bsm = toggle_item_sp(
+      lambda: tr("Enhanced Blind Spot Monitoring (Alpha)"),
+      description=lambda: tr(DESCRIPTIONS["enhanced_bsm"]),
+      initial_state=ui_state.params.get_bool("ToyotaEnhancedBsm"),
+      callback=self._on_enable_enhanced_bsm,
+      enabled=lambda: not ui_state.engaged,
+    )
+
     self.items = [
       self.enforce_stock_longitudinal,
       self.stop_and_go_hack,
       self.tss2_smooth,
+      self.enhanced_bsm,
     ]
 
   def _on_enable_enforce_stock_longitudinal(self, state: bool):
@@ -78,6 +94,8 @@ class ToyotaSettings(BrandSettings):
           self.stop_and_go_hack.action_item.set_state(False)
           ui_state.params.put_bool("ToyotaTSS2Smooth", False)
           self.tss2_smooth.action_item.set_state(False)
+          ui_state.params.put_bool("ToyotaEnhancedBsm", False)
+          self.enhanced_bsm.action_item.set_state(False)
           ui_state.params.put_bool("OnroadCycleRequested", True)
         else:
           self.enforce_stock_longitudinal.action_item.set_state(False)
@@ -130,6 +148,40 @@ class ToyotaSettings(BrandSettings):
       ui_state.params.put_bool("ToyotaStopAndGoHack", False)
       ui_state.params.put_bool("OnroadCycleRequested", True)
 
+  def _on_enable_enhanced_bsm(self, state: bool):
+    if state:
+      def confirm_callback(result: int):
+        if result == DialogResult.CONFIRM:
+          ui_state.params.put_bool("ToyotaEnhancedBsm", True)
+          ui_state.params.put_bool("OnroadCycleRequested", True)
+        else:
+          self.enhanced_bsm.action_item.set_state(False)
+
+      content = (f"<h1>{self.enhanced_bsm.title}</h1><br>" +
+                 f"<p>{self.enhanced_bsm.description}</p>")
+
+      dlg = ConfirmDialog(content, tr("Enable"), rich=True, callback=confirm_callback)
+      gui_app.push_widget(dlg)
+
+    else:
+      ui_state.params.put_bool("ToyotaEnhancedBsm", False)
+      ui_state.params.put_bool("OnroadCycleRequested", True)
+
+  def _sync_enhanced_bsm(self, longitudinal: bool, enforce_stock: bool, engaged: bool) -> None:
+    if longitudinal and not enforce_stock:
+      self.enhanced_bsm.action_item.set_enabled(not engaged)
+      new_desc = tr(DESCRIPTIONS["enhanced_bsm"])
+      show_desc = False
+    else:
+      self.enhanced_bsm.action_item.set_enabled(False)
+      new_desc = "<b>" + tr(ENHANCED_BSM_UNAVAILABLE) + "</b>\n\n" + tr(DESCRIPTIONS["enhanced_bsm"])
+      show_desc = True
+
+    if self.enhanced_bsm.description != new_desc:
+      self.enhanced_bsm.set_description(new_desc)
+      if show_desc:
+        self.enhanced_bsm.show_description(True)
+
   def update_settings(self):
     if ui_state.CP is not None:
       longitudinal = ui_state.CP.openpilotLongitudinalControl
@@ -166,6 +218,8 @@ class ToyotaSettings(BrandSettings):
         self.tss2_smooth.set_description(new_desc)
         if show_desc:
           self.tss2_smooth.show_description(True)
+
+      self._sync_enhanced_bsm(longitudinal, enforce_stock, ui_state.engaged)
     else:
       self.stop_and_go_hack.action_item.set_enabled(False)
       new_desc = "<b>" + tr(ONROAD_ONLY_DESCRIPTION) + "</b>\n\n" + tr(DESCRIPTIONS["stop_and_go_hack"])
@@ -178,3 +232,9 @@ class ToyotaSettings(BrandSettings):
       if self.tss2_smooth.description != new_desc:
         self.tss2_smooth.set_description(new_desc)
         self.tss2_smooth.show_description(True)
+
+      self.enhanced_bsm.action_item.set_enabled(False)
+      new_desc = "<b>" + tr(ONROAD_ONLY_DESCRIPTION) + "</b>\n\n" + tr(DESCRIPTIONS["enhanced_bsm"])
+      if self.enhanced_bsm.description != new_desc:
+        self.enhanced_bsm.set_description(new_desc)
+        self.enhanced_bsm.show_description(True)
