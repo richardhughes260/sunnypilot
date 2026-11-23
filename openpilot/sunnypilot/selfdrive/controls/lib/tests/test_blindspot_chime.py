@@ -66,13 +66,22 @@ class TestBlindspotChime(unittest.TestCase):
     from openpilot.sunnypilot.selfdrive.selfdrived.events import EVENTS_SP
     from openpilot.sunnypilot.selfdrive.selfdrived.events_base import ET, Priority
 
+    from openpilot.selfdrive.ui.soundd import MAX_VOLUME, playback_volume
+
     EventName = log.OnroadEvent.EventName
     EventNameSP = custom.OnroadEventSP.EventName
     AudibleAlert = log.SelfdriveState.AudibleAlert
+    AudibleAlertSP = custom.SelfdriveStateSP.AudibleAlert
     alert = EVENTS_SP[EventNameSP.blindspotChime][ET.PERMANENT]
     self.assertEqual(alert.priority, Priority.LOWEST)
-    self.assertEqual(int(alert.audible_alert), int(AudibleAlert.prompt))
+    self.assertEqual(int(alert.audible_alert), int(AudibleAlertSP.blindspotChime))
+    self.assertNotEqual(int(alert.audible_alert), int(AudibleAlert.prompt))
     self.assertEqual(int(alert.alert_size), int(log.SelfdriveState.AlertSize.none))
+    # Full scale at a quiet device volume and at a loud one. Prompt stays scaled.
+    self.assertEqual(playback_volume(alert.audible_alert, 0.05), MAX_VOLUME)
+    self.assertEqual(playback_volume(alert.audible_alert, MAX_VOLUME), MAX_VOLUME)
+    self.assertEqual(playback_volume(AudibleAlert.prompt, 0.05), 0.05)
     blocked = EVENTS[EventName.laneChangeBlocked][ET.WARNING]
     self.assertGreater(blocked.priority, alert.priority)
     self.assertEqual(int(blocked.audible_alert), int(AudibleAlert.prompt))
+    self.assertEqual(playback_volume(blocked.audible_alert, 0.2), 0.2)

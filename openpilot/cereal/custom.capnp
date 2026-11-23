@@ -112,6 +112,8 @@ struct SelfdriveStateSP @0x81c2f05a394cf4af {
 
     promptSingleLow @31;
     promptSingleHigh @32;
+    # Full-scale blind-spot chime. soundd does not run this through the volume curve.
+    blindspotChime @33;
   }
 }
 

@@ -40,7 +40,17 @@ sound_list_sp: dict[int, tuple[str, int | None, float]] = {
   # AudibleAlertSP, file name, play count (none for infinite)
   AudibleAlertSP.promptSingleLow: ("prompt_single_low.wav", 1, MAX_VOLUME),
   AudibleAlertSP.promptSingleHigh: ("prompt_single_high.wav", 1, MAX_VOLUME),
+  AudibleAlertSP.blindspotChime: ("warning.wav", 1, MAX_VOLUME),
 }
+
+
+def playback_volume(alert: int, current_volume: float) -> float:
+  # Only the blind-spot chime. Full scale, skipping the device volume curve
+  # (VOLUME_BASE) and the ambient-noise gain from calculate_volume.
+  if int(alert) == int(AudibleAlertSP.blindspotChime):
+    return MAX_VOLUME
+  return current_volume
+
 
 sound_list: dict[int, tuple[str, int | None, float]] = {
   # AudibleAlert, file name, play count (none for infinite)
@@ -128,7 +138,7 @@ class Soundd(QuietMode):
           self.pending_stop = False
           break
 
-    return ret * self.current_volume
+    return ret * playback_volume(self.current_alert, self.current_volume)
 
   def callback(self, data_out: np.ndarray, frames: int, time, status) -> None:
     if status:
